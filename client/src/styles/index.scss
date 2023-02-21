@@ -1,0 +1,64 @@
+html {
+  background-color: var(--outside-background-color);
+
+  --outside-background-color: rgb(243, 224, 191);
+
+  --layout-header-sign-color: rgb(218, 171, 83);
+  --layout-header-sign-color-hover: rgb(242, 190, 93);
+  --layout-header-dropdown-color: rgb(184, 135, 29);
+  --layout-header-dropdown-list-color: rgb(210, 201, 201);
+  --layout-header-dropdown-list-color-hover: rgb(234, 234, 234);
+
+  --layout-footer-background-color: rgb(247, 247, 180);
+  --layout-footer-badge-color: rgb(102, 196, 102);
+  --layout-footer-badge-color-hover: rgb(117, 227, 117);
+
+  --homepage-diary-paper-left-backround-color: rgb(134, 208, 201);
+  --homepage-diary-paper-right-backround-color: rgb(115, 178, 172);
+  --homepage-diary-lock-backround-color: rgb(218, 213, 219);
+
+  --diary-main-background-color: rgb(132, 193, 132);
+
+  --diary-aside-background-color: green;
+  --diary-aside-title-color: white;
+  --diary-aside-list-background-color: rgb(208, 227, 208);
+  --diary-aside-list-color: black;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  ul,
+  p,
+  li,
+  h1,
+  h2,
+  h3 {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+// 애니메이션 스타일링
+.slide-top-to-bottom-enter {
+  transform: scale(1, 0) translate(0, -150%);
+}
+.slide-top-to-bottom-enter-active {
+  transform: scale(1, 1);
+  transition: all 200ms ease-out;
+}
+
+.slide-top-to-bottom-exit-active {
+  transform: scale(1, 0) translate(0, -150%);
+  transition: all 200ms ease-out;
+}

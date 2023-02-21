@@ -1,0 +1,65 @@
+.calendar {
+  display: flex;
+  width: 80%;
+  margin: 3rem auto;
+  min-height: 100%;
+  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-size: 14px;
+  background-color: white;
+
+  &__main {
+    flex-grow: 1;
+    padding: 1rem;
+  }
+  &__title {
+    text-align: center;
+    font-size: 2.2rem;
+    width: 20rem;
+    height: 3rem;
+    margin: 0 auto;
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+    background-color: orange;
+    color: white;
+    border-radius: 10px;
+    box-shadow: 1px 1px 3px gray;
+  }
+}
+
+/*  추후, 루트 css 파일에 넣어, 적용할 스타일들
+
+.fc-button {
+  border: none !important;
+}
+:root {
+  --fc-button-text-color: #fff;
+  --fc-button-bg-color: #1f81e2 !important;
+  --fc-button-active-bg-color: #304457 !important;
+
+  --fc-button-hover-bg-color: #114372 !important;
+}
+
+@media (max-width: 1200px) {
+  [상단 툴바] 
+  .fc .fc-toolbar {
+    flex-direction: column;
+  }
+
+  [툴바 안의 div ]
+  .fc .fc-toolbar div {
+    margin: 0.3rem;
+  }
+
+  .demo-app {
+    height: 100% !important;
+    min-height: 55rem !important;
+  }
+
+  [month 그리드, 달력 ]
+  .fc-scroller-harness-liquid {
+    height: 100% !important;
+    min-height: 30rem !important;
+  }
+}
+
+*/

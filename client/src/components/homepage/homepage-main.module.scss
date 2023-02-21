@@ -1,0 +1,54 @@
+@mixin paper($position) {
+  width: 100%;
+  height: 25rem;
+  margin-top: 2rem;
+  @if ($position== "left") {
+    background-color: var(--homepage-diary-paper-left-backround-color);
+    margin-left: 2.5rem;
+    transform: rotate(-5deg);
+  }
+  @if ($position== "right") {
+    background-color: var(--homepage-diary-paper-right-backround-color);
+    margin-left: -2.5rem;
+    transform: rotate(5deg);
+  }
+}
+
+.homepage {
+  width: 70%;
+  max-width: 50rem;
+  height: 30rem;
+  margin: 3rem auto;
+  display: flex;
+
+  .diary {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+
+    &__left {
+      @include paper(left);
+    }
+
+    &__right {
+      @include paper(right);
+    }
+
+    &__lock {
+      position: absolute;
+      width: 4rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 45%;
+      left: calc(50% - 2rem);
+      background-color: var(--homepage-diary-lock-backround-color);
+      z-index: 1;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+}

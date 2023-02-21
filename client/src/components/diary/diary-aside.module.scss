@@ -1,0 +1,32 @@
+.side {
+  width: 15rem;
+  background-color: var(--diary-aside-background-color);
+  text-align: center;
+  border-radius: 20px;
+
+  &__title {
+    color: var(--diary-aside-title-color);
+    margin: 1rem 0;
+  }
+  &__ul {
+    list-style: none;
+
+    li {
+      display: flex;
+      width: 90%;
+      justify-content: center;
+      align-items: center;
+      margin: 0.5rem auto;
+      background-color: var(--diary-aside-list-background-color);
+      padding: 0.2rem 0;
+      border-radius: 10px;
+
+      &:hover {
+        cursor: pointer;
+      }
+      p {
+        color: var(--diary-aside-list-color);
+      }
+    }
+  }
+}
