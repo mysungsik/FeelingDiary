@@ -3,6 +3,7 @@ import HomePage from "./pages/homepage";
 import DiaryPage from "./pages/diary";
 import DiaryCalendarPage from "./pages/diary-calendar";
 import DiaryGraphPage from "./pages/diary-graph";
+import { useCookies } from "react-cookie";
 import { useEffect } from "react";
 import {
   useAppDispatch,
@@ -19,6 +20,7 @@ function App() {
   const userDiaryData = useSelector(
     (state: RootState) => state.userDiary.userDiaryData
   );
+  const [cookies] = useCookies(["naver_access"]);
 
   useEffect(() => {
     if (initial) {
@@ -27,6 +29,8 @@ function App() {
     }
     dispatch(getRequestForDiary(dummyuUserEmail));
   }, []);
+
+  console.log(cookies);
 
   return (
     <div className="App">

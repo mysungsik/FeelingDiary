@@ -18,6 +18,8 @@ const LayoutHeader = () => {
     setDiaryDropdown(false);
   };
 
+  const naverLoginURL = "http://localhost:5000/api/oauth/naver";
+
   return (
     <header className={styles.header}>
       <div className={styles.header__logo} onClick={() => history.push("/")}>
@@ -26,7 +28,7 @@ const LayoutHeader = () => {
       </div>
       <div className={styles.header__menus}>
         <div className={styles.header__menus__users}>
-          <p>로그인</p>
+          <a href={naverLoginURL}>로그인</a>
         </div>
         <div className={styles.header__menus__menulist}>
           <ul>

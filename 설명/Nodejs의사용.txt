@@ -1,0 +1,652 @@
+[서버 시작]=================== 
+
+1. npm init & nodemon 설정
+
+    <package.json>
+    
+        "scripts": {
+            "test": "echo \"Error: no test specified\" && exit 1",
+            "start" : "nodemon index.js"
+        },
+
+2. 기본 미들웨어의 설정
+
+    < index.js >
+        const express = require("express");
+        const cors = require("cors");
+        const bodyparser = require("body-parser");
+
+        const app = express();
+
+        app.use(cors());
+
+        app.listen(5000);
+
+3. 라우터를 사용한 미들웨어의 설정
+    : 라우터를 사용하면, "필요한 미들웨어를 아웃소싱하고 하나로 뭉쳐"
+        최종적으로 하나의 미들웨어로 만들어 준다.
+
+    < routes / diary.js >
+
+        const express = require("express");
+
+        const router = express.Router();
+        
+        router.get("/", (req, res, next) => {
+            console.log("diary");
+            res.json({ message: "this is diary" });
+        });
+        
+        module.exports = router
+            
+    < index.js >
+
+        const express = require("express");
+        const cors = require("cors");
+        const bodyparser = require("body-parser");
+
+        const diaryRouter = require("./routes/diaryt-routes");  // 불러와서
+
+        const app = express();
+
+        app.use(cors());
+        app.use(diaryRouter);   // 미들웨어에 등록
+
+        app.listen(5000);
+
+
+4. 특정 경로에만 요청을 전달하는 미들웨어
+
+    < index.js >
+
+            ...
+        const diaryRouter = require("./routes/diaryt-routes"); 
+        app.use(diaryRouter);
+
+    -------------
+
+    => 이러한 경우에는, "모든 요청에 관해" Express 가 diaryRouter에 정의한 요청을 전달할 것이다.
+        우리는 그럴 필요가 없다.
+
+        Express 는 우리가 필요한 요청만 전달해주어야한다.
+        따라서, 첫번째 인수를 추가하여, "해당 경로에서만 요청을 전달하도록 한다."
+
+    
+
+    < index.js >
+
+      
+
+5. 그렇다면 router 에서 만든 주소와, index.js 에서 있는 주소는 어떤 차이가 있는가?
+
+    < index.js > 에서 정의한 주소가 가장 먼저 들어가고
+    < router / diary.js >   에서 정의한 주소는 그 이후 들어간다.
+
+    ------------
+
+        < index.js > 에서 
+            app.use("/api/diary, diaryRouter);
+
+        < router / diary.js >  에서
+            router.get("/", (req,res,next) =>{
+
+            })
+
+    라고 정의했다면
+    "http://localhost:5000/api/diary" 에  접속했을때, GET 요청을 하게되지만
+
+    ------------
+
+        < index.js > 에서 
+            app.use("/api/diary, diaryRouter);
+
+        < router / diary.js >  에서
+            router.get("/ms", (req,res,next) =>{
+
+            })
+
+    라고 정의했다면
+    "http://localhost:5000/api/diary/ms"    에 접속했을때, GET 요청을 하게된다.
+
+
+6. 주소에 대해 동적세그먼트 만들기 (동적 API 라우트 만들기)
+        
+    "next.js"            의 동적 API 를 "req.query" 로 가져오는 것처럼
+    "react-router-dom "   에서 동적 페이지( /:id ) 를 "useParams" 로 가져오는 것처럼
+    "express 에서도  "    동적 API 주소를 가져올 수 있다.
+
+    < router / diary.js >
+        const express = require("express");
+
+        const router = express.Router();
+
+        router.get("/:userEmail", (req, res, next) => {
+            const userEmail = req.params.userEmail;     // params 로 가져온다.
+            console.log(userEmail);
+            res.json({ message: "this is diary" });
+        });
+
+        module.exports = router;
+
+    => "http://localhost:5000/api/diary/ms@ms.com" 에 접속한다면
+        { message: "this is diary" } 가 브라우저에,
+        ms@ms.com 이 콘솔창에 적히는 것을 볼 수 있다.
+
+
+7. 코드의 위치에 주의하자
+
+    동적 새그먼트가 많아진다면, 
+
+        /:id
+        /user/:id
+
+    가 동시에 존재할때, 
+    
+        "api/diary/user" 에 접속하면, "user는 id취급"을 받을것이다.
+
+    반대로 뒤집힌다면
+
+        /user/:id
+        /:id
+
+        "api/diary/user" 에 접속하면, "user는 값이 없는 동적 새그먼트 취급"을 받을것이다.
+       
+
+8. 잘못된 요청에 대해, status404 보내기
+
+    < router / diary.js >
+
+        const express = require("express");
+
+        const router = express.Router();
+
+        router.get("/:userEmail", (req, res, next) => {
+            const userEmail = req.params.userEmail;
+
+            if (!userEmail.includes("@")) {
+                res.status(404).json({ message: "not found" });     // return이나, if,else 등을 사용하여, 코드를 멈추지 않는다면
+                return;                                             // 코드의 중지는 필수다.
+            }
+            res.json({ message: "this is diary" });                 // 다음 코드도 실행됨에 주의한다.
+        });
+
+        module.exports = router;
+
+
+9. 특수 처리 미들에어를 사용해 에러 처리하기
+    
+    인수가 4개 (error, req, res, next) 인 미들웨어는 특수하게 사용된다.
+    "error 가 발생했을 때만 처리되는 미들웨어로서 동작 할 수 있다."
+
+    < index.js >
+    
+        const express = require("express");
+        const cors = require("cors");
+        const bodyparser = require("body-parser");
+        
+        const diaryRouter = require("./routes/diaryt-routes");
+        
+        const app = express();
+        
+        app.use(cors());
+        app.use("/api/diary", diaryRouter);
+        
+        app.use((error, req, res, next)=>{
+            if(res.headerSent){             // 이미 res를 보냈는지 확인하는 작업
+                return next(error)          // 이미 res를 보냈다면, 그냥 넘기고(next), 코드를 종료(return)
+            }
+            res.status(error.code || 500)   // 에러코드가 넘어왔다면 사용 아니면 500
+            res.json({message: error.message || "something got wrong"})     // 에러메시지가 왔다면 사용, 아니면 따로정의
+        })
+        
+        app.listen(5000);
+        
+    ---------------
+
+    에러를 넘기는 방법은 "두 가지"이다.
+
+    1) throw new Error
+    2) next(error)
+
+    thorw new Error 는 "동기적 코드에 적합하다." 실행되자마자 에러를 발생시키고 코드를 중지한다.
+    하지만 REST API 의 특성상 "비동기 함수" 를 주로 사용할것이다.
+
+    이는 함수의 결과값이 언제 들어올지 모르고, 그때까지 기다릴 필요가 있다.
+    따라서, "비동기 함수" 일 경우 "next" 를 통해, 값이 나오면 에러를 넘기는 것이 좋은 방법이겠다.
+    물론 "동기적 코드에도 그냥 next 를 사용하여 에러를 넘기도록하자."
+
+    ---------------
+    < router / diary.js >
+
+                ...
+        router.get("/:userEmail", (req, res, next) => {
+            const userEmail = req.params.userEmail;
+
+            if (!userEmail.includes("@")) {
+                const error = new Error("이메일이 올바르지 않습니다.")      // 에러 생성자함수로, 에러 객체를 생성(message 가 디폴트 키)
+                error.code = 404                                            // 해당 에러객체에, 코드를 추가해주고
+                next(error)                                                 // 넘긴다.
+                return                                                      // return 으로 중지하는 것을 잊지 말자.
+            }   
+            res.json({ message: "this is diary" });
+        });
+
+        module.exports = router;
+
+10. MVC 패턴 - Controller 추가하기
+
+    router 에는, 연결해주는 route 만 있는 것이 좋다.
+    해당 route 에 연결된 미들웨어의 로직은 "Controller" 에 아웃소싱하여 사용하도록 한다.
+
+    < controllers / diary-controller.js >
+
+        const getUserDiary = (req, res, next) => {
+            const userEmail = req.params.userEmail;
+        
+            if (!userEmail.includes("@")) {
+                const error = new Error("이메일이 올바르지 않습니다.");
+                error.code = 404;
+                next(error);
+                return;
+            }
+            res.json({ message: "this is diary" });
+        };
+        
+        exports.getUserDiary = getUserDiary     // export 한다.
+
+    < routes / diary-routes.js >
+
+        const express = require("express");
+        const diaryContoller = require("../controllers/diary-controller");  // 가져와서
+
+        const router = express.Router();
+
+        router.get("/:userEmail", diaryContoller.getUserDiary);     // 해당 미들웨어에 넣는다.
+
+        module.exports = router;
+
+11. bodyparser 를 통해, 클라이언트로부터 json 포맷으로 된 data 받기 (POST 와 req)
+
+    서버와 클라이언트는 json 포맷으로 데이터를 주고받는다.
+
+    클라이언트로부터 온 json 포맷의 body 를 서버에서 자바스크립트코드로 변환하여 받아야 한다.
+
+    미리 설치한 bodyparser 를 미들웨어에 등록하여, 클라이언트로부터 온 데이터들을 자동적으로 자바스크립트 코드로 변환한다.
+
+    < index.js >
+
+        const express = require("express");
+        const cors = require("cors");
+        const bodyParser = require("body-parser");
+
+        const diaryRouter = require("./routes/diaryt-routes");
+
+        const app = express();
+
+        app.use(cors());
+        app.use(bodyParser.json())      // 라우트에 진입하기전, bodyParser 를 통해 변환한다.
+
+        app.use("/api/diary", diaryRouter);
+
+    ------------
+
+    < controllers / diary-controller.js >
+
+        const postUserDiary = (req, res, next) => {
+            const { userEmail, diaryTitle, diaryContent, feeling, date } = req.body;
+        
+            const inputData = {
+                userEmail,
+                diaryTitle,
+                diaryContent,
+                feeling,
+                date,
+            };
+        
+            // 추후 MongoDB 같은 데이터베이스에 넣는 로직 추가.
+
+            // 성공한다면
+            res.status(201).json({ message: "success" });
+        };
+    
+        exports.postUserDiary = postUserDiary;
+        
+    ------------
+
+    < routes / diary-routes.js >
+
+        const express = require("express");
+        const diaryContoller = require("../controllers/diary-controller");
+
+        const router = express.Router();
+
+        router.post("/insert", diaryContoller.postUserDiary)
+
+        module.exports = router;
+
+
+[req.body 와 동적 새그먼트(동적 API 라우트) 중 어떤것을 사용할까?]
+
+    일반적으로, ID 와 같이, 구분이 되도록 하는 요소들은, 동적 새그먼트를 사용해서
+
+    req.params 를 이용해 해당 값을 가져온다.
+
+    실질적인 데이터 부분은 클라이언트에서 요청하여 req.body 에 넣는 것이 일반적이다.
+
+    1) GET 요청에서 "유저의 ID" 를 사용하여 값을 가져온다면 
+
+        /api/diary/:id 에 GET 요청을 하여
+            동적인 id 를 가져와 데이터를 가져온다던가
+
+    2) DELETE 요청에서 "해당 아이템의 id" 에 해당하는 값을 받고, 데이터를 지울때에도
+
+        /api/diary/:itemId 에 "DELETE" 요청을 하는것이 적합하겠다.
+
+    3) POST 요청에서 값을 보낸다면, "유저의 ID" 를 사용하여 동적 새그먼트를 작성해
+
+        /api/diary/:id 에 "POST" 요청을 담고
+        클라이언트측에서 body 에 값을 넣어 적절한 body data 로 "POST" 요청을 하는 것이 일반적이다.
+    
+12. postman 을 통해 POST가 정상적인지 확인한다.
+
+    "body" 에 "raws" 를 선택하고, "json" 포맷을 선택해서 보낸다.
+
+13. 해당 서버로 오는 요청중, 잘못된 경로로 요청이 왔을때 처리하는 미들웨어 만들기
+
+    누군가 서버로 요청을 보냈는데 주소를 잘못 보낼 수 있다.
+
+    DOMAIN/api/diary 로 보내야하는 요청을
+
+    DOMAIN/diary 로 보낸는 실수 같은 것들이 그렇다.
+
+    이런 것들을 처리하기위해, 앞서 모든 요청에 대해 맞는 주소가 없어, 
+        "마지막에 모든 요청을 담는 미들웨어를 만들어 처리"한다.
+
+    < index.js >
+
+        app.use((req, res, next) => {               // 모든 라우터를 거쳐, 맞는 라우터가 없을때 최종적으로 담길 미들웨어
+            const error = new Error("wrong url");
+            error.code = 404;
+            throw error;
+        });
+
+        app.use((error, req, res, next) => {       // 오류처리 미들웨어
+            if (res.headerSent) {
+                return next(error);
+            }
+            res.status(error.code || 500);
+            res.json({ message: error.message || "something got wrong" });
+        });
+
+
+    => 이는, 앞서 만든 오류처리 미들웨어(error 가 발생하면 실행되는)에 의해 
+        최종적으로 에러메시지와 코드가 표시될것이다.
+
+14. 여러개의 미들웨어
+
+    < routes / diary-routes.js >
+
+        const express = require("express")
+
+        const router = express.Router()
+
+        router.get("/:userEmail", diaryContoller.getUserDiary);
+
+    ------------
+
+    기본적으로 하나의 미들웨어만 되어있지만
+    필요에 의해
+
+        router.get("/:userEmail", 미들웨어1, 미들웨어2, ..., diaryContoller.getUserDiary);
+
+    이렇게 여러개의 미들웨어를 추가적으로 사요할 수 도 있다.
+
+    이때 미들웨어는 왼쪽부터 차례대로 실행된다.
+
+    이곳에 "추가적인 Validation 미들웨어" 를 넣을 수도 있다.
+
+
+14. Validation 의 추가
+
+    서버에서 값을 받을때 Validation 을 추가해야한다.
+
+    나는 자체적으로 Validation 로직을 만들어, 컨트롤러 안에 넣는 것을 선호한다.(미들웨어로 넣는것보다.)
+
+    따라서 Validation 로직을 아웃소싱하고, 그 결과값으로 Validation 을 할것이다.
+
+    < helper / diary-Validation.js >
+
+        const diaryValidation = (userInput) => {
+            if (
+                !userInput.userEmail.includes("@") ||           // Validation Check
+                !userInput.diaryTitle ||
+                !userInput.diaryContent ||
+                typeof userInput.feeling !== "number" ||
+                userInput.feeling < 1 ||
+                userInput.feeling > 9
+            ) {
+                const error = new Error("입력값이 잘못되었습니다.");    // 그렇다면 error return
+                error.code = 400;
+                return error;
+            } else {
+                return null;        //  아니라면 null 을 return 한다.
+            }
+        };
+        
+        exports.diaryValidation = diaryValidation;
+
+
+    < controllers / diary-contorller.js >
+
+        const { diaryValidation } = require("../helper/diary-valdation");       // export 한 Validation 파일의 "함수를 직접 뽑아서" 사용한다
+
+        const postUserDiary = (req, res, next) => {
+
+            const errorCheck = diaryValidation(req.body);               // 해당 함수에 따라, null 혹은 error 가 반환되고
+            
+            if (errorCheck !== null) {                                  // 그에따라, error 를 next 로 넘긴다. return 은 잊지않는다.
+                next(errorCheck);
+                return;
+            }
+                    ...
+
+            res.status(201).json({ message: "success", data: inputData });
+        };
+                
+
+    ** "함수를 직접 뽑지 않는다면"
+
+            const valdationCheck = require("../helper/diary-valdation");
+
+            valdationCheck.diaryValidation(req.body)
+
+        이처럼 여러줄 써야하니 내부에있는 함수를 { } 를 사용하여 직접 뽑도록 하자.
+
+    ** "넘겨진 error 는"
+    
+        < index.js > 의 "error처리 미들웨어" 에 의해 error code 와 message 가 표시될것이다.
+        
+
+[추가사항 : 여러개의 exports ]
+
+    하나의 함수를 exports 할때, module.exports 를 사용했다.
+
+        ex) module.exports = router;
+
+    파일 안에 여러개의 함수를 exports 하고 싶을때 하나씩 exports 를 써서 export 했다.
+
+        ex) exports.diaryValidation = diaryValidation
+            exports.postUserDiary = postUserDiary
+            exports.getUserDiary = getUserDiary
+                ...
+
+    "사실, 여러개의 각각 export 도 module.exports 를 사용 할 수 있고 이게 훨씬 깔끔하다."
+
+        module.exports = {
+            diaryValidation:diaryValidation,
+            postUserDiary:postUserDiary,
+            getUserDiary:getUserDiary
+        }
+
+    "심지어, 모던 자바스크립트는 저 : 도 지울 수 있다."
+
+        module.exports = {
+            diaryValidation,
+            postUserDiary,
+            getUserDiary
+        }
+
+15. MongoDB 에 연결하기 "전에" 우선환경변수를 설정해보자.
+
+    -   npm i dotenv
+
+    Node.js 에서는 기본적으로 환경변수를 사용할 수 있는 process.env 라는 내장 자바스크립트 객체를 제공한다.
+    
+    루트디렉토리에 ".env" 를 통해 "환경변수 설정"이 가능하다.
+
+    이 "환경변수를 읽어오기 위해, dotenv 라는 모듈"이 필요하다
+
+    "dotenv 라이브러리를 설치한다."
+
+        < .env >
+
+            MONGODB_URL = ...
+            MONGODB_ID = ...
+            MONGODB_PASSWORD = ...
+
+    이후 사용하기 위해, 사용할 파일의 최상단에, dotenv 를 불러오도록한다.
+
+        < xxx .js >
+            require('dotenv').config();
+            
+            const url = process.env.MONGODB_URL
+            console.log(url)
+
+
+16. MongoDB 연결하기
+
+    -   npm i mongodb 를 통해, 설치를 했다.
+
+    이제 연결해보자.
+
+    https://www.npmjs.com/package/mongodb
+
+
+        < database / database.js >
+
+            const { MongoClient } = require('mongodb');
+            require('dotenv').config();                             // 환경변수를 사용하기위해, dotenv 를 가져오는 것을 잊지 말자.
+
+            const url = process.env.MONGODB_URL                     // 환경변수의 사용
+            let database;
+            
+            const connectDb = async ()=>{
+                const client = await MongoClient.connect(url)       // 연결용도로 사용하는 connectDb
+                database = client.db("feeling-diary")               // port 에 연결하기만 하면 된다.
+            }
+            
+            const getDb = ()=>{                                     // 실제로 db 에 접근할 getDb
+                if(!database){
+                    throw new Error("연결이 실패했습니다.")
+                }
+                return database;                                    // 반환값은, 연결된 database Name 까지이다. (더 해도되고)
+            }                                                       // 최종적으로 연결에 필요한 것은 
+                                                                    // client.db(dbName).collection(collectionName).insertOne or find or findOne ... 
+            module.exports = {                                      // 이므로, getDb.collection(collectionName).query 를 하면되겠다.
+                connectDb,
+                getDb
+            }
+
+        < index.js >
+        
+            const { connectDb } = require("./database/database");       // export 한 connectDb 를 가져온다.
+
+                ...
+
+            connectDb().then(() => {              // port 에 DB 를 연결해준다.
+                app.listen(5000);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+                    
+
+17. 연결한 코드를 가지고 DB 사용하기 [ POST ]
+
+    기존에 작성해두었던, controller의 "postUserDiary" 의 로직이 DB 로 값을 전달하게 만든다.
+
+    < contorllers / diary-controller.js >
+
+        const { diaryValidation } = require("../helper/diary-valdation");
+        const { getDb } = require("../database/database");
+            
+        const postUserDiary = async (req, res, next) => {
+            const errorCheck = diaryValidation(req.body);
+        
+            if (errorCheck !== null) {
+                next(errorCheck);
+                return;
+            }
+            const { userEmail, diaryTitle, diaryContent, feeling, date } = req.body;
+        
+            const inputData = {
+                userEmail,
+                diaryTitle,
+                diaryContent,
+                feeling,
+                date,
+            };
+        
+            const response = await getDb().collection("diary").insertOne(inputData);
+
+            console.log(response);                  // 서버이기 때문에, json 데이터를 바로 읽을 수 있나? 왜 await response.json() 을 하지 않아도 읽히는지 궁금하다. 되지도 않고
+        
+            res.status(201).json({ message: "success", data: response });   // response 자체가 json 데이터일텐데, 다시 json 데이터로 변경해서 보내는지 의문이다.
+        };
+
+-   ==> 성공적이다.
+
+
+18. 연결한 코드를 가지고 DB 사용하기 [ GET 요청도 해보자 ]
+
+    < contorllers / diary-controller.js >
+
+        const { diaryValidation } = require("../helper/diary-valdation");
+        const { getDb } = require("../database/database");
+        
+        const getUserDiary = async (req, res, next) => {
+        const userEmail = req.params.userEmail;
+    
+        
+        if (!userEmail.includes("@")) {
+            const error = new Error("이메일이 올바르지 않습니다.");
+            error.code = 404;
+            next(error);
+            return;
+        }
+        
+        const response = await getDb()
+            .collection("diary")
+            .find({ userEmail })
+            .toArray();
+        
+        res.json({ message: "this is diary", data: response });
+        };
+        
+
+    ** [추가]
+      
+        유저가 인증되었는지 추가하는 항목이 필요하겠다.
+        유저가 body 나, header 에 토큰을 담아 보내야한다.
+    
+        [클라이언트의 요청에, 이렇게 header 를 담아보내거나 할때 혹은, body 에 인증에 관련된 것을 함께 보낼때]
+    
+        await fetch(`https://pre-onboarding-selection-task.shop/todos/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        });
+    
+    // [이렇게 받는 서버에서, 그걸 확인하고 DB 에 요청하는 작업을 해보고싶다.]
+
