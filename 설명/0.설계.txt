@@ -1,0 +1,145 @@
+0. 기능 설계
+    1. Oauth 기능
+    2. 말로 말하면 다이어리가 적히는 기능
+    3. 다이어리에, 그림 넣을 수 있는 기능 ( 쉽지않겠다 )
+    4. 말로 말하면 투두리스가 적히는 기능
+    5. 그래프로 모아둔 기분을 확인하는 기능
+
+1. 데이터 (DB) 설계
+
+    1) "diary" collection
+
+        {
+            _id : string            // mongodb 자동
+            userEmail : string      // OAuth 에서 온 값
+            diaryTitle : string
+            diaryContent : string
+            feeling : number;
+            date : string
+        }
+
+    2) "todo" collection
+
+        {
+            _id : string            // mongodb 자동
+            userEmail : string      // OAuth 에서 온 값
+            isCompleted: boolean
+            todoTitle : string;
+            todoContent :string;
+            date : string;
+        }
+
+
+    ** 추가적으로 user 가 Image 를 올리면, Image 를 어디다가 저장하는지 알아내고
+        저장된곳에서 불러오게 만들고싶다.
+        어떻게해야할까
+
+2. API Route 설계
+
+    /api/auth       => 네이버, 구글, 등 OAuth....
+
+    /api/diary      => GET
+    /api/diary      => POST
+    /api/diary      => DELETE
+
+    /api/todo      => GET
+    /api/todo      => POST
+    /api/todo      => UPDATE
+    /api/todo      => DELETE
+
+3. 클라이언트 페이지 설계
+
+    PPT 로 정리
+    
+    
+4. 기본 로직 설계
+    
+    1. 다이어리 페이지
+
+        <진입>
+            "GET" /api/diary
+
+            [진입과 동시에 해당되는 유저의 다이어리 데이터를 전부 GET 해와, "Store" 에 저장하도록 한다.]
+
+            ** 예상 Slice 이름 : "allUserDiary"
+
+        <사이드바>
+
+            1) "Store" 에서 가져온 값으로 "다이어리 기록"을 채운다.
+
+                "다이어리 기록을 클릭" 하여
+                "다이어리"가 해당 "store" 에 의해 채워질 경우,
+                "다이어리의 input 들은" 전부 Readonly 가 되어, 수정할 수 없게 한다.
+
+            2) "DELETE"  /api/diary
+
+                값이 채워진 경우, "다이어리"의 "지우기" 버튼이 "삭제" 버튼으로 변경되도록 한다.
+
+                "삭제" 버튼을 누를경우, DB 의 값을 삭제함과 동시에 (DB 제거용)
+                    Store 에 저장되어 있는 값도 지우도록 한다(화면 제거용)
+
+                다시 Readonly 에서 벗어나, 일반 적으로 적을 수 있는 화면이 된다.
+
+            3) "WEB API" 를 이용한, 텍스트의 작성이 가능하도록 한다.
+
+        < 메인 다이어리 >
+
+            1) "POST" /api/diary
+
+                적은 값을 DB에 저장한다.
+                "DB에 저장"함과 동시에, "화면에 있는 데이터도 변화되도록 Store 에도 추가하는 것"을 잊지 않는다.
+        
+    
+    2. 다이어리 캘린더 페이지
+
+        <진입>
+            "GET" /api/diary
+
+            [진입과 동시에 해당되는 유저의 다이어리 데이터를 전부 GET 해와, "Store" 에 저장하도록 한다.]
+
+            ** 예상 Slice 이름 : "allUserDiary"
+
+        <캘린더>
+            캘린더를 클릭하면, 해당되는 다이어리를 Store 의 값에서 빼와 "클릭된 값을 저장하는 Store 에 저장하도록 한다."
+
+            ** 예상 Slice 이름: "selectedUserDiary"
+
+        <팝업 다이어리>
+
+            "selectedUserDiary" store 에서 값을 빼와 다이어리를 채우고 화면에 보여준다.
+            이때, 다이어리는 메인다이어리가 아니라, 작은 미니 다이어리로 표시한다.
+            모달형식으로 만든다.
+
+
+    3. 다이어리 그래프 페이지
+
+        <진입>
+            "GET" /api/diary
+
+            [진입과 동시에 해당되는 유저의 다이어리 데이터를 전부 GET 해와, "Store" 에 저장하도록 한다.]
+
+            ** 예상 Slice 이름 : "allUserDiary"
+
+        <그래프>
+
+            해당 State 로 화면에 기분 그래프를 표시해주도록한다.
+
+    4. 공통 로직
+
+        "페이지를 방문하여 초기 데이터를 불러올때", 
+            Loading State 를 사용해, 로딩 시간을 모달로 채워준다.
+
+    
+
+    ** "전부 페이지에 진입하면 새 State 를 받아오는 이유"
+        유저가 어느페이지부터 방문할지 모른다. 각 페이지마다 전부 Data 를 가져온다.
+
+
+
+
+** [배포시... 문제있을수도. 깃허브에 어케올리지?]
+    
+    -   깃허브에 일단 올리긴 했는데, 어떻게 해야할지 모르겠다.
+    -   현재 [클라이언트가 전혀 안올라간다.] (나중에 빌드한것만 올리면 될수도있고.,..)
+    
+    -   일단 기록용(잔디용)으로 두고, 나중에 실제로 필요할때 정확히 해보자.

@@ -1,0 +1,151 @@
+0. [클라이언트] 타입스크립트와 리액트 설치
+    npx create-react-app my-app --template typescript
+
+1. [클라이언트] SASS, Redux-toolkit, react-router 설치
+
+    npm i sass
+    npm i @reduxjs/toolkit
+    npm i react-redux
+    npm i --save-dev @types/react-router-dom@5
+        * v5 로 한다. v6 는 아직 잘 모른다.
+
+2. [클라이언트] animated CSS, react-transition-group 설치
+
+    npm install animate.css --save
+    npm i @types/react-transition-group
+
+3. [서버] express, mongodb, bodyparser 와 nodemon, cors 의 설치
+
+    npm i express
+    npm i nodemon
+    npm i body-parser
+    npm i mongodb
+    npm i cors
+        * https://www.npmjs.com/package/cors
+        cors 의 설정을 할 수 있다.
+
+
+[클라이언트부터 시작]=================== 
+
+1. react-router-dom 감싸기
+    https://v5.reactrouter.com/web/guides/primary-components
+
+    BrowserRouter 로 감싸고, Switch 와 Route 로
+
+2. 레이아웃 작업하기
+
+    1) 틀만 
+    2) React-transition-group 사용
+
+3. 홈페이지 작업하기
+
+    1) 틀만
+    2) animated css 사용
+    
+
+4. 다이어리 작업하기
+
+    1) input type "range" 사용
+
+5. 다이어리 캘린더 작업하기
+
+    1) 풀캘린더 사용
+
+        [예상되는 로직]
+
+            캘린더를 누르면 작은 다이어리를 보이게 한다.
+
+            캘린더에서 해당 id를 가진 다이어리를 클릭하면
+            해당 값을 selected diary 라는 store 안에 넣도록 한다.
+
+            [예상 selected diary 값들]
+
+                {
+                    _id : string ;
+                    popup : boolean;    // 팝업될지 말지 결정하는 값
+                    diaryTitle: string;
+                    diaryContent: string;
+                    feeling:number;
+                    date : string
+                }
+
+            이후 "popupCalendar.tsx" 에서, store 의 값을 찾아 넣고
+            팝업 캘린더가 나오도록 하게하자 
+
+
+6. 다이어리 음성인식 사용하기
+
+    < 설치 및 예시 >
+
+        install :       npm i react-speech-recognition
+        ts install :    npm install --save @types/react-speech-recognition
+        기본 readme :   https://www.npmjs.com/package/react-speech-recognition
+        codepan example : https://codesandbox.io/s/react-speech-recognition-3tjwt?file=/src/Dictaphone.tsx:460-486
+
+    
+        => WEB SPEECH API 를 이용한, 리액트 라이브러리의 사용
+
+    < 기능 >
+
+        1. [보이스모드, 일반 모드] 를 만든다.
+
+        2. [보이스모드], [일반모드] 의 변환은, "변환버튼" 을 눌러 바꾸게 한다.
+
+        3. "변환버튼" 은 현재의 모드를 표시해주고, 누르면 바뀐다.
+
+        4. [보이스모드] 에서는 텍스트창을 손으로 건들 수 없다.
+        5. [일반모드] 에서는 마이크를 사용할 수 없다.
+
+        6. 두가지 모드들은 한 컴포넌트 안에 뭉쳐둔다.
+
+        7. [보이스모드] start 를 "마이크버튼" 으로 만든다.
+        8. [보이스모드] "마이크버튼을 한번 누르면 실행, 한번 더누르면 종료"
+        9. [보이스모드] reset 버튼을 누르면, 텍스트 삭제
+
+            ** 문제 : 일반메시지와 보이스 메시지를 섞어가며 사용하고 싶은데
+                    잘안된다.
+
+        <섞는 로직>
+
+            * textarea 의 value 는 어차피 변하지 않고, 유저가 입력한 값을 유지한다.
+            * 최종적으로 "diaryContent" 에 들어갈 값 = "message"
+            * 잠시 보이스 값을 담아두는 값 = "transcript"
+
+            1. [일반모드] 에서 넣는 값은 "onChange" 를 통해 "message" 안에 들어간다.
+
+                따라서, 일반 textarea 는
+
+                    <textarea onChange={(e) => changeMessage(e.target.value)}> </textarea>
+
+            2. [보이스모드] 로 변경된다면, 보이스 값은 "transcript" 안에 들어간다.  
+
+                따라서, 보이스의 textarea 는
+
+                    <textarea value={message + transcript}> </textarea>
+                
+            3. [모드] 변경시, useEffect 를 통해서 
+                "message" 안의 값을 "message + transcript" 로 변경하고
+                "transcript" 의 값을 초기화시킨다.
+
+                    useEffect(() => {
+                        setMessage((prev) => prev + transcript);
+                        resetTranscript();
+                    }, [toggleVoiceMode]);
+
+            ==> textarea 의 값은 [일반모드] 일 경우 당연히 그대로 있고
+                [보이스모드] 의 경우에도, 
+                기존의 value 인 "message" State 에 
+                추가적으로 보이스로 입력한, "transcript" 도 적히기 때문에
+                모드를 변경하더라도 텍스트가 유지된다.
+
+        < 제출>
+            [ 일반모드] 에서 diaryContent 제출시 , "message" State 만 제출하면 된다.
+            [ 보이스모드] 에서 diaryContent 제출시, "message + transcript" 를 해서 제출한다.
+                            
+
+[서버시작] ================================================================================================== 
+
+1. 기본 서버작업 시작
+
+    
+
