@@ -4,13 +4,18 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useState, useEffect, FormEvent } from "react";
+import { useCookies } from "react-cookie";
+import { useDispatch } from "react-redux";
+import { userDiaryAction, TypeUserDiary } from "../../store/user-diary-slice";
 
 const DiaryMain = () => {
-  const dummyuUserEmail = "mms@ms.com"; // 추후 OAuth 로 변경
+  const [loginUserEmail, setLoginUserEmail] = useState<string>("");
+  const [cookies] = useCookies(["naver_access"]);
   const [toggleVoiceMode, setToggleVoiceMode] = useState<boolean>(false);
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [feeling, setFeeling] = useState<number>(5);
+  const dispatch = useDispatch();
 
   const {
     transcript, // 마이크로 인식한 텍스트
@@ -29,6 +34,9 @@ const DiaryMain = () => {
   useEffect(() => {
     setContent((prev) => prev + transcript);
     resetTranscript();
+    if (cookies.naver_access) {
+      setLoginUserEmail(cookies.naver_access.response.email);
+    }
   }, [toggleVoiceMode]);
 
   if (!browserSupportsSpeechRecognition) {
@@ -79,15 +87,17 @@ const DiaryMain = () => {
   const submitHandler = async (e: FormEvent) => {
     e.preventDefault();
 
+    const userInputData: TypeUserDiary = {
+      userEmail: loginUserEmail,
+      diaryTitle: title,
+      diaryContent: toggleVoiceMode ? content + transcript : content,
+      feeling: feeling,
+      date: new Date().toLocaleDateString("ko-KR"),
+    };
+
     const response = await fetch(`http://localhost:5000/api/diary/insert`, {
       method: "POST",
-      body: JSON.stringify({
-        userEmail: dummyuUserEmail,
-        diaryTitle: title,
-        diaryContent: toggleVoiceMode ? content + transcript : content,
-        feeling: feeling,
-        date: new Date().toLocaleDateString("ko-KR"),
-      }),
+      body: JSON.stringify(userInputData),
       headers: {
         "Content-Type": "application/json",
       },
@@ -95,8 +105,13 @@ const DiaryMain = () => {
 
     const responseData = await response.json();
 
+    console.log(responseData);
+
     if (responseData.message === "success") {
       resetContents();
+      // DB 에서 fetch 를 다시하지 않고 화면에 표시하기 위해, store 에도 업데이트
+      userInputData._id = responseData.data.insertedId;
+      dispatch(userDiaryAction.addUserDiary(userInputData));
     }
   };
 
