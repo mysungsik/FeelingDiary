@@ -49,6 +49,14 @@
       &:hover {
         cursor: pointer;
       }
+
+      .needLogin {
+        position: absolute;
+        width: 10rem;
+        top: 3rem;
+        text-align: center;
+        color: rgb(110, 110, 110);
+      }
     }
   }
 }

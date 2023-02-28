@@ -1,5 +1,6 @@
 const { diaryValidation } = require("../helper/diary-valdation");
 const { getDb } = require("../database/database");
+const { ObjectId } = require("mongodb");
 
 const getUserDiary = async (req, res, next) => {
   const userEmail = req.params.userEmail;
@@ -45,7 +46,20 @@ const postUserDiary = async (req, res, next) => {
   res.status(201).json({ message: "success", data: response });
 };
 
+const deleteUserDiary = async (req, res, next) => {
+  const itemId = req.params.id;
+
+  const response = await getDb()
+    .collection("diary")
+    .deleteOne({ _id: new ObjectId(itemId) });
+
+  if (response.ok) {
+    res.status(200).json({ message: "delete compelete!" });
+  }
+};
+
 module.exports = {
   getUserDiary,
   postUserDiary,
+  deleteUserDiary,
 };

@@ -9,17 +9,11 @@ import {
   useAppDispatch,
   getRequest as getRequestForDiary,
 } from "./store/user-diary-action";
-import { useSelector } from "react-redux";
-import { RootState } from "./store";
 
 let initial = true;
 
 function App() {
-  const dummyuUserEmail = "mms@ms.com"; // 추후 OAuth 로 변경
   const dispatch = useAppDispatch();
-  const userDiaryData = useSelector(
-    (state: RootState) => state.userDiary.userDiaryData
-  );
   const [cookies] = useCookies(["naver_access"]);
 
   useEffect(() => {
@@ -27,10 +21,10 @@ function App() {
       initial = false;
       return;
     }
-    dispatch(getRequestForDiary(dummyuUserEmail));
-  }, []);
-
-  console.log(cookies);
+    if (cookies.naver_access) {
+      dispatch(getRequestForDiary(cookies.naver_access.response.email));
+    }
+  }, [cookies]);
 
   return (
     <div className="App">

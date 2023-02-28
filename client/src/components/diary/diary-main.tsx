@@ -4,13 +4,27 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useState, useEffect, FormEvent } from "react";
+import { useCookies } from "react-cookie";
+import { useDispatch } from "react-redux";
+import { userDiaryAction, TypeUserDiary } from "../../store/user-diary-slice";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import { insertUserDiary } from "../../api/user-diary";
+import PopupDiary from "../modal/popup-diary";
 
 const DiaryMain = () => {
-  const dummyuUserEmail = "mms@ms.com"; // 추후 OAuth 로 변경
+  const [loginUserEmail, setLoginUserEmail] = useState<string>("");
+  const [cookies] = useCookies(["naver_access"]);
   const [toggleVoiceMode, setToggleVoiceMode] = useState<boolean>(false);
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [feeling, setFeeling] = useState<number>(5);
+
+  const selectedDiaryData = useSelector(
+    (state: RootState) => state.selectedDiary
+  );
+
+  const dispatch = useDispatch();
 
   const {
     transcript, // 마이크로 인식한 텍스트
@@ -26,6 +40,14 @@ const DiaryMain = () => {
     ],
   });
 
+  // 초기 유저 로그인아이디 입력
+  useEffect(() => {
+    if (cookies.naver_access) {
+      setLoginUserEmail(cookies.naver_access.response.email);
+    }
+  }, []);
+
+  // 보이스모드 온오프시 데이터 처리
   useEffect(() => {
     setContent((prev) => prev + transcript);
     resetTranscript();
@@ -35,7 +57,7 @@ const DiaryMain = () => {
     return <span>Browser doesn't support speech recognition.</span>;
   }
 
-  // 키보드로 모드 변경
+  // 키보드로 모드 변경 핸들러
   const keyboradModeChangeHandler = (
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
@@ -46,7 +68,7 @@ const DiaryMain = () => {
       (e.shiftKey && e.key === "Control") ||
       (e.ctrlKey && e.key === "Shift")
     ) {
-      changeMode();
+      changeModeHandler();
     }
   };
 
@@ -59,12 +81,12 @@ const DiaryMain = () => {
   };
 
   // 모드 변경 핸들러
-  const changeMode = () => {
+  const changeModeHandler = () => {
     setToggleVoiceMode((prev) => !prev);
   };
 
   // 리셋 핸들러
-  const resetContents = () => {
+  const resetContentsHandler = () => {
     resetTranscript();
     setContent("");
     setTitle("");
@@ -79,24 +101,21 @@ const DiaryMain = () => {
   const submitHandler = async (e: FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch(`http://localhost:5000/api/diary/insert`, {
-      method: "POST",
-      body: JSON.stringify({
-        userEmail: dummyuUserEmail,
-        diaryTitle: title,
-        diaryContent: toggleVoiceMode ? content + transcript : content,
-        feeling: feeling,
-        date: new Date().toLocaleDateString("ko-KR"),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const userInputData: TypeUserDiary = {
+      userEmail: loginUserEmail,
+      diaryTitle: title,
+      diaryContent: toggleVoiceMode ? content + transcript : content,
+      feeling: feeling,
+      date: new Date().toLocaleDateString("ko-KR"),
+    };
 
-    const responseData = await response.json();
+    const inserResult = await insertUserDiary(userInputData);
 
-    if (responseData.message === "success") {
-      resetContents();
+    if (inserResult.message === "success") {
+      resetContentsHandler();
+      // DB 에서 fetch 를 다시하지 않고 화면에 표시하기 위해, store 에도 업데이트
+      userInputData._id = inserResult.data.insertedId;
+      dispatch(userDiaryAction.addUserDiary(userInputData));
     }
   };
 
@@ -125,8 +144,10 @@ const DiaryMain = () => {
         </div>
       )}
 
+      {selectedDiaryData.userDiaryData && <PopupDiary />}
+
       <form className={styles.form} onSubmit={submitHandler}>
-        <div className={styles.form__changeMode} onClick={changeMode}>
+        <div className={styles.form__changeMode} onClick={changeModeHandler}>
           {toggleVoiceMode ? (
             <p>
               보이스모드<span> ctrl + shift</span>
@@ -174,21 +195,37 @@ const DiaryMain = () => {
         {toggleVoiceMode ? (
           <textarea
             className={styles.form__texts}
-            style={{ width: "90%", height: "80%", resize: "none" }}
+            style={{
+              width: "90%",
+              height: "80%",
+              resize: "none",
+              background: selectedDiaryData.userDiaryData
+                ? "rgb(220, 220, 220)"
+                : "white",
+            }}
             value={content + transcript}
+            readOnly={selectedDiaryData.userDiaryData ? true : false}
           ></textarea>
         ) : (
           <textarea
             className={styles.form__texts}
-            style={{ width: "90%", height: "80%", resize: "none" }}
+            style={{
+              width: "90%",
+              height: "80%",
+              resize: "none",
+              background: selectedDiaryData.userDiaryData
+                ? "rgb(220, 220, 220)"
+                : "white",
+            }}
             onChange={(e) => changeMessage(e.target.value)}
+            readOnly={selectedDiaryData.userDiaryData ? true : false}
             value={content}
           ></textarea>
         )}
 
         <div className={styles.form__buttons}>
           <button type="submit"> 저장</button>
-          <button type="button" onClick={resetContents}>
+          <button type="button" onClick={resetContentsHandler}>
             지우기
           </button>
         </div>

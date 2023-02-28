@@ -2,23 +2,32 @@ import styles from "./layout-header.module.scss";
 import { CSSTransition } from "react-transition-group";
 import { useState, useRef } from "react";
 import { useHistory } from "react-router-dom";
+import { useCookies } from "react-cookie";
 
 const LayoutHeader = () => {
   const [diaryDropdown, setDiaryDropdown] = useState<boolean>(false);
   const [todoDropdown, setTodoDropdown] = useState<boolean>(false);
   const nodeRef = useRef(null);
   const history = useHistory();
+  const [cookies, setCookie, removeCookie] = useCookies(["naver_access"]);
 
-  const toggleDiary = () => {
+  const toggleDiaryMenu = () => {
     setDiaryDropdown((prev) => !prev);
     setTodoDropdown(false);
   };
-  const toggleTodo = () => {
+  const toggleTodoMenu = () => {
     setTodoDropdown((prev) => !prev);
     setDiaryDropdown(false);
   };
 
-  const naverLoginURL = "http://localhost:5000/api/oauth/naver";
+  const loginHandler = () => {
+    const naverLoginURL = "http://localhost:5000/api/oauth/naver";
+    window.location.href = naverLoginURL;
+  };
+  const logoutHandler = () => {
+    removeCookie("naver_access");
+    history.replace("/");
+  };
 
   return (
     <header className={styles.header}>
@@ -28,12 +37,16 @@ const LayoutHeader = () => {
       </div>
       <div className={styles.header__menus}>
         <div className={styles.header__menus__users}>
-          <a href={naverLoginURL}>로그인</a>
+          {cookies.naver_access ? (
+            <p onClick={logoutHandler}>로그아웃</p>
+          ) : (
+            <p onClick={loginHandler}>로그인</p>
+          )}
         </div>
         <div className={styles.header__menus__menulist}>
           <ul>
             <li>
-              <div onClick={() => toggleDiary()}>
+              <div onClick={() => toggleDiaryMenu()}>
                 다이어리
                 {diaryDropdown ? (
                   <span> &#11165;</span>
@@ -78,7 +91,7 @@ const LayoutHeader = () => {
               </CSSTransition>
             </li>
             <li>
-              <div onClick={toggleTodo}>
+              <div onClick={toggleTodoMenu}>
                 메뉴2번
                 {todoDropdown ? <span> &#11165;</span> : <span> &#11167;</span>}
               </div>

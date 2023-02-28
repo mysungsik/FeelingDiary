@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface TypeUserDiary {
-  _id: string; // mongodb 자동
+  _id?: string; // mongodb 자동
   userEmail: string; // OAuth 에서 온 값
   diaryTitle: string;
   diaryContent: string;
@@ -17,6 +17,14 @@ const userDiarySlice = createSlice({
   reducers: {
     putUserDiary(state, action: PayloadAction<TypeUserDiary[]>) {
       state.userDiaryData = action.payload;
+    },
+    addUserDiary(state, action: PayloadAction<TypeUserDiary>) {
+      state.userDiaryData = [...state.userDiaryData, action.payload];
+    },
+    deleteUserDiary(state, action: PayloadAction<string>) {
+      state.userDiaryData = state.userDiaryData.filter(
+        (diary) => diary._id !== action.payload
+      );
     },
   },
 });
