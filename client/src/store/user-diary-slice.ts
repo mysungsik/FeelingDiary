@@ -21,6 +21,11 @@ const userDiarySlice = createSlice({
     addUserDiary(state, action: PayloadAction<TypeUserDiary>) {
       state.userDiaryData = [...state.userDiaryData, action.payload];
     },
+    deleteUserDiary(state, action: PayloadAction<string>) {
+      state.userDiaryData = state.userDiaryData.filter(
+        (diary) => diary._id !== action.payload
+      );
+    },
   },
 });
 
