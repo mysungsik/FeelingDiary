@@ -7,4 +7,6 @@ router.get("/:userEmail", diaryContoller.getUserDiary);
 
 router.post("/insert", diaryContoller.postUserDiary);
 
+router.delete("/delete/:id", diaryContoller.deleteUserDiary)
+
 module.exports = router;
