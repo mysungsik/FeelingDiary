@@ -1,32 +1,17 @@
 import { TypeUserDiary } from "../store/user-diary-slice";
+import { client } from "../util/axios";
 
-export const getUserDiary = async (userEmail: string) => {
-  const response = await fetch(`http://localhost:5000/api/diary/${userEmail}`);
-  const responseData = await response.json();
-
-  return responseData.data;
+export const getUserDairy = async (userEmail: string) => {
+  const response = await client.get(`/${userEmail}`);
+  return response.data.data;
 };
 
 export const insertUserDiary = async (userInput: TypeUserDiary) => {
-  const response = await fetch(`http://localhost:5000/api/diary/insert`, {
-    method: "POST",
-    body: JSON.stringify(userInput),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  const responseData = await response.json();
-
-  return responseData;
+  const response = await client.post("/insert", userInput);
+  return response.data;
 };
 
 export const deleteUserDiary = async (id: string) => {
-  const response = await fetch(`http://localhost:5000/api/diary/delete/${id}`, {
-    method: "DELETE",
-  });
-
-  const responseData = await response.json();
-
-  return responseData;
+  const response = await client.delete(`/delete/${id}`);
+  return response.data;
 };
