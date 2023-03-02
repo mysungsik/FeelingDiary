@@ -21,6 +21,7 @@ function App() {
       initial = false;
       return;
     }
+    // 초기값 DB에서 Store 로
     if (cookies.naver_access) {
       dispatch(getRequestForDiary(cookies.naver_access.response.email));
     }
