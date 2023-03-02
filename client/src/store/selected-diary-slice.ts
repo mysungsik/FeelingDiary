@@ -7,7 +7,7 @@ const selectedDiarySlice = createSlice({
   name: "selectedDiary",
   initialState,
   reducers: {
-    selectDiary(state, action: PayloadAction<TypeUserDiary>) {
+    selectDiary(state, action: PayloadAction<TypeUserDiary | undefined>) {
       state.userDiaryData = action.payload;
     },
     unSelectDiary(state) {
